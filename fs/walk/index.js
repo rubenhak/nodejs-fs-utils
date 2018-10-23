@@ -1,7 +1,21 @@
+const slash = require('slash');
 var _classes = {
 	fs	: require("fs"),
 	path	: require("path")
 };
+
+function isMatch(path, options) 
+{
+    var xPath = slash(path);
+    if (options.filter) {
+        for(var re of options.filter) {
+            if (!xPath.match(re)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 var walk = function(path, opts, callback, onend_callback) {
 	path = _classes.path.normalize(path);
@@ -60,6 +74,17 @@ var walk = function(path, opts, callback, onend_callback) {
 	var fnc	= 0;
 	var errorsSend	= false;
 
+    var _addToStack = function(path, file) {
+        var newPath = _classes.path.join(path, file);
+        if (!isMatch(newPath, opts)) {
+            return;
+        }
+        if (opts.stackPushEnd) {
+            cache.stack.push(newPath);
+        } else {
+            cache.stack.unshift(newPath);
+        }
+    }
 
 	var _tick	= function () {
 		if (cache.errors.length && !opts.skipErrors) {
@@ -98,15 +123,9 @@ var walk = function(path, opts, callback, onend_callback) {
 								cache.errors.push(err);
 							}
 						} else {
-							if (opts.stackPushEnd) {
-								files.forEach(function (file) {
-									cache.stack.push(path + ( path[path.length -1] === separator ? "" : separator ) + file);									
-								});
-							} else {
-								files.forEach(function (file) {
-									cache.stack.unshift(path + ( path[path.length -1] === separator ? "" : separator ) + file);
-								});
-							}
+                            files.forEach(function (file) {
+                                _addToStack(path, file);
+                            });
 						}
 						callback(err, path, stats, _tick, cache);
 					});

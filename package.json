@@ -38,7 +38,8 @@
     "url": "https://github.com/sergiu-gordienco/nodejs-fs-utils/issues"
   },
   "homepage": "https://github.com/sergiu-gordienco/nodejs-fs-utils",
-  "dependencies"	: {
-    "module-require": "*"
+  "dependencies": {
+    "module-require": "*",
+    "slash": "^2.0.0"
   }
 }
