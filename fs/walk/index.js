@@ -4,11 +4,11 @@ var _classes = {
 	path	: require("path")
 };
 
-function isMatch(path, options) 
+function isMatch(path, filters) 
 {
     var xPath = slash(path);
-    if (options.filter) {
-        for(var re of options.filter) {
+    if (filters) {
+        for(var re of filters) {
             if (!xPath.match(re)) {
                 return false;
             }
@@ -22,6 +22,16 @@ var walk = function(path, opts, callback, onend_callback) {
 	var fs;
 	var separator = _classes.path.sep;
 
+    var filters = [];
+    if (opts.filter) {
+        for(var x of opts.filter) {
+            if (typeof stringValue == "string") {
+                filters.push(new RegExp(x, "g"));
+            } else {
+                filters.push(x);
+            }
+        }
+    }
 
 	if (typeof(opts) === "function") {
 		callback	= opts;
@@ -76,7 +86,7 @@ var walk = function(path, opts, callback, onend_callback) {
 
     var _addToStack = function(path, file) {
         var newPath = _classes.path.join(path, file);
-        if (!isMatch(newPath, opts)) {
+        if (!isMatch(newPath, filters)) {
             return;
         }
         if (opts.stackPushEnd) {
@@ -115,6 +125,9 @@ var walk = function(path, opts, callback, onend_callback) {
 					cache.files++;
 					callback(err, path, stats, _tick, cache);
 				} else {
+                    if (!isMatch(path, filters)) {
+                        return
+                    }
 					cache.count++;
 					cache.dirs++;
 					fs.readdir(path, function(err, files) {
